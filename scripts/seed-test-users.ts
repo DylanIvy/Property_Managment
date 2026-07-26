@@ -7,8 +7,10 @@
 // Uses the service-role key (admin, bypasses RLS) — Node-only, never run in the browser.
 // Run with: npm run seed
 
-import "dotenv/config";
+import { config } from "dotenv";
 import { createClient } from "@supabase/supabase-js";
+
+config({ path: ".env.local" });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

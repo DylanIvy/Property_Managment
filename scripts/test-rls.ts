@@ -6,8 +6,10 @@
 // Requires scripts/seed-test-users.ts to have been run first.
 // Run with: npm run test:rls
 
-import "dotenv/config";
+import { config } from "dotenv";
 import { createClient } from "@supabase/supabase-js";
+
+config({ path: ".env.local" });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

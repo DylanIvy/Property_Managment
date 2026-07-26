@@ -12,13 +12,13 @@ language sql
 security definer
 stable
 set search_path = public
-as $$
+as $func$
   select exists (
     select 1 from public.property_staff ps
     where ps.property_id = p_property_id
       and ps.staff_id = auth.uid()
   );
-$$;
+$func$;
 
 create or replace function public.is_owner_of_property(p_property_id uuid)
 returns boolean
@@ -26,13 +26,13 @@ language sql
 security definer
 stable
 set search_path = public
-as $$
+as $func$
   select exists (
     select 1 from public.properties p
     where p.id = p_property_id
       and p.owner_id = auth.uid()
   );
-$$;
+$func$;
 
 -- ============ profiles ============
 create policy "profiles_select" on public.profiles
