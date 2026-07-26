@@ -2,6 +2,8 @@
 
 import { useActionState } from "react";
 import { addStaffToProperty } from "@/lib/actions/properties";
+import { Button } from "@/components/ui/button";
+import { Input, Label, FieldGroup, FieldError } from "@/components/ui/field";
 
 export function AddStaffForm({ propertyId }: { propertyId: string }) {
   const [state, action, pending] = useActionState(
@@ -10,33 +12,26 @@ export function AddStaffForm({ propertyId }: { propertyId: string }) {
   );
 
   return (
-    <form action={action} className="flex flex-wrap items-end gap-3 rounded border p-4">
-      <div className="flex flex-col gap-1">
-        <label htmlFor="email">Staff email</label>
-        <input id="email" name="email" type="email" className="border rounded px-2 py-1" />
-        {state?.errors?.email && <p className="text-sm text-red-600">{state.errors.email}</p>}
-      </div>
-      <div className="flex flex-col gap-1">
-        <label htmlFor="service_type">Service type</label>
-        <input
-          id="service_type"
-          name="service_type"
-          placeholder="e.g. landscaper"
-          className="border rounded px-2 py-1"
-        />
-      </div>
-      <div className="flex flex-col gap-1">
-        <label htmlFor="notes">Notes</label>
-        <input id="notes" name="notes" className="border rounded px-2 py-1" />
-      </div>
-      <button
-        disabled={pending}
-        type="submit"
-        className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
-      >
+    <form action={action} className="flex flex-col gap-3 rounded-lg border border-dashed border-zinc-300 p-4 dark:border-zinc-700 sm:flex-row sm:flex-wrap sm:items-end">
+      <FieldGroup>
+        <Label htmlFor="email">Staff email</Label>
+        <Input id="email" name="email" type="email" className="sm:w-56" />
+        <FieldError>{state?.errors?.email}</FieldError>
+      </FieldGroup>
+      <FieldGroup>
+        <Label htmlFor="service_type">Service type</Label>
+        <Input id="service_type" name="service_type" placeholder="e.g. landscaper" className="sm:w-40" />
+      </FieldGroup>
+      <FieldGroup>
+        <Label htmlFor="notes">Notes</Label>
+        <Input id="notes" name="notes" className="sm:w-40" />
+      </FieldGroup>
+      <Button disabled={pending} type="submit" variant="secondary">
         {pending ? "Adding..." : "Add staff"}
-      </button>
-      {state?.message && <p className="w-full text-sm text-gray-700">{state.message}</p>}
+      </Button>
+      {state?.message && (
+        <p className="w-full text-sm text-zinc-600 dark:text-zinc-400">{state.message}</p>
+      )}
     </form>
   );
 }

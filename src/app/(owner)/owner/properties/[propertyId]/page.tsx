@@ -1,5 +1,8 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/ui/page-header";
 import { AddStaffForm } from "./add-staff-form";
 import { CreateTaskForm } from "./create-task-form";
 
@@ -38,52 +41,57 @@ export default async function OwnerPropertyDetailPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-xl font-semibold">{property.name}</h1>
-        {property.address && <p className="text-sm text-gray-500">{property.address}</p>}
-      </div>
+      <PageHeader title={property.name} subtitle={property.address} />
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-medium">Staff directory</h2>
-        {!staff?.length && <p className="text-sm text-gray-500">No staff linked yet.</p>}
-        <ul className="flex flex-col gap-2">
+        <h2 className="font-medium text-zinc-900 dark:text-zinc-50">Staff directory</h2>
+        {!staff?.length && (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">No staff linked yet.</p>
+        )}
+        <div className="flex flex-col gap-2">
           {staff?.map((s) => {
             const p = Array.isArray(s.profiles) ? s.profiles[0] : s.profiles;
             return (
-              <li key={s.id} className="rounded border p-3 text-sm">
-                <span className="font-medium">{p?.name ?? p?.email}</span>
-                {s.service_type && <span className="text-gray-500"> — {s.service_type}</span>}
-                {s.notes && <p className="text-gray-500">{s.notes}</p>}
-              </li>
+              <Card key={s.id} className="p-3 text-sm">
+                <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                  {p?.name ?? p?.email}
+                </span>
+                {s.service_type && (
+                  <span className="text-zinc-500 dark:text-zinc-400"> — {s.service_type}</span>
+                )}
+                {s.notes && <p className="text-zinc-500 dark:text-zinc-400">{s.notes}</p>}
+              </Card>
             );
           })}
-        </ul>
+        </div>
         <AddStaffForm propertyId={propertyId} />
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-medium">Tasks</h2>
-        {!tasks?.length && <p className="text-sm text-gray-500">No tasks yet.</p>}
-        <ul className="flex flex-col gap-2">
+        <h2 className="font-medium text-zinc-900 dark:text-zinc-50">Tasks</h2>
+        {!tasks?.length && (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">No tasks yet.</p>
+        )}
+        <div className="flex flex-col gap-2">
           {tasks?.map((t) => {
             const p = Array.isArray(t.profiles) ? t.profiles[0] : t.profiles;
             return (
-              <li key={t.id} className="rounded border p-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">{t.title}</span>
-                  <span className={t.status === "done" ? "text-green-700" : "text-amber-700"}>
-                    {t.status}
-                  </span>
+              <Card key={t.id} className="p-3 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium text-zinc-900 dark:text-zinc-50">{t.title}</span>
+                  <Badge tone={t.status === "done" ? "done" : "open"}>{t.status}</Badge>
                 </div>
-                {t.description && <p className="text-gray-500">{t.description}</p>}
-                <p className="text-gray-500">
+                {t.description && (
+                  <p className="text-zinc-500 dark:text-zinc-400">{t.description}</p>
+                )}
+                <p className="text-zinc-500 dark:text-zinc-400">
                   Assigned to: {p?.name ?? p?.email ?? "Unassigned"}
                   {t.due_date && ` · Due ${t.due_date}`}
                 </p>
-              </li>
+              </Card>
             );
           })}
-        </ul>
+        </div>
         <CreateTaskForm propertyId={propertyId} staffOptions={staffOptions} />
       </section>
     </div>

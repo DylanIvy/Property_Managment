@@ -2,36 +2,37 @@
 
 import { useActionState } from "react";
 import { createProperty } from "@/lib/actions/properties";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input, Label, FieldGroup, FieldError } from "@/components/ui/field";
 
 export default function NewPropertyPage() {
   const [state, action, pending] = useActionState(createProperty, undefined);
 
   return (
-    <div className="flex max-w-md flex-col gap-6">
-      <h1 className="text-xl font-semibold">New property</h1>
+    <div className="flex flex-col gap-6">
+      <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">New property</h1>
 
-      <form action={action} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <label htmlFor="name">Name / nickname</label>
-          <input id="name" name="name" className="border rounded px-2 py-1" />
-          {state?.errors?.name && <p className="text-sm text-red-600">{state.errors.name}</p>}
-        </div>
+      <Card className="max-w-md">
+        <form action={action} className="flex flex-col gap-4">
+          <FieldGroup>
+            <Label htmlFor="name">Name / nickname</Label>
+            <Input id="name" name="name" />
+            <FieldError>{state?.errors?.name}</FieldError>
+          </FieldGroup>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="address">Address</label>
-          <input id="address" name="address" className="border rounded px-2 py-1" />
-        </div>
+          <FieldGroup>
+            <Label htmlFor="address">Address</Label>
+            <Input id="address" name="address" />
+          </FieldGroup>
 
-        {state?.message && <p className="text-sm text-red-600">{state.message}</p>}
+          <FieldError>{state?.message}</FieldError>
 
-        <button
-          disabled={pending}
-          type="submit"
-          className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
-        >
-          {pending ? "Creating..." : "Create property"}
-        </button>
-      </form>
+          <Button disabled={pending} type="submit" className="w-full">
+            {pending ? "Creating..." : "Create property"}
+          </Button>
+        </form>
+      </Card>
     </div>
   );
 }

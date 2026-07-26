@@ -3,47 +3,47 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { login } from "@/lib/actions/auth";
+import { AuthCard } from "@/components/auth-card";
+import { Button } from "@/components/ui/button";
+import { Input, Label, FieldGroup, FieldError } from "@/components/ui/field";
 
 export function LoginForm({ justSignedUp }: { justSignedUp: boolean }) {
   const [state, action, pending] = useActionState(login, undefined);
 
   return (
-    <div className="mx-auto flex max-w-sm flex-1 flex-col justify-center gap-6 p-6">
-      <h1 className="text-xl font-semibold">Log in</h1>
-
+    <AuthCard title="Log in">
       {justSignedUp && (
-        <p className="text-sm text-green-700">
+        <p className="mb-4 rounded-md bg-green-50 px-3 py-2 text-sm text-green-700 dark:bg-green-900/30 dark:text-green-300">
           Account created. Check your email to confirm, then log in below.
         </p>
       )}
 
       <form action={action} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <label htmlFor="email">Email</label>
-          <input id="email" name="email" type="email" className="border rounded px-2 py-1" />
-          {state?.errors?.email && <p className="text-sm text-red-600">{state.errors.email}</p>}
-        </div>
+        <FieldGroup>
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" name="email" type="email" autoComplete="email" />
+          <FieldError>{state?.errors?.email}</FieldError>
+        </FieldGroup>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="password">Password</label>
-          <input id="password" name="password" type="password" className="border rounded px-2 py-1" />
-          {state?.errors?.password && <p className="text-sm text-red-600">{state.errors.password}</p>}
-        </div>
+        <FieldGroup>
+          <Label htmlFor="password">Password</Label>
+          <Input id="password" name="password" type="password" autoComplete="current-password" />
+          <FieldError>{state?.errors?.password}</FieldError>
+        </FieldGroup>
 
-        {state?.message && <p className="text-sm text-red-600">{state.message}</p>}
+        <FieldError>{state?.message}</FieldError>
 
-        <button
-          disabled={pending}
-          type="submit"
-          className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
-        >
+        <Button disabled={pending} type="submit" className="mt-2 w-full">
           {pending ? "Logging in..." : "Log in"}
-        </button>
+        </Button>
       </form>
 
-      <p className="text-sm">
-        Need an account? <Link href="/signup" className="underline">Sign up</Link>
+      <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
+        Need an account?{" "}
+        <Link href="/signup" className="font-medium text-blue-600 hover:underline dark:text-blue-400">
+          Sign up
+        </Link>
       </p>
-    </div>
+    </AuthCard>
   );
 }

@@ -2,6 +2,8 @@
 
 import { useActionState } from "react";
 import { createTask } from "@/lib/actions/tasks";
+import { Button } from "@/components/ui/button";
+import { Input, Textarea, Select, Label, FieldGroup, FieldError } from "@/components/ui/field";
 
 type StaffOption = { staff_id: string; profiles: { name: string | null; email: string | null } | null };
 
@@ -18,50 +20,47 @@ export function CreateTaskForm({
   );
 
   return (
-    <form action={action} className="flex flex-col gap-3 rounded border p-4">
-      <div className="flex flex-col gap-1">
-        <label htmlFor="title">Title</label>
-        <input id="title" name="title" className="border rounded px-2 py-1" />
-        {state?.errors?.title && <p className="text-sm text-red-600">{state.errors.title}</p>}
+    <form action={action} className="flex flex-col gap-4 rounded-lg border border-dashed border-zinc-300 p-4 dark:border-zinc-700">
+      <FieldGroup>
+        <Label htmlFor="title">Title</Label>
+        <Input id="title" name="title" />
+        <FieldError>{state?.errors?.title}</FieldError>
+      </FieldGroup>
+
+      <FieldGroup>
+        <Label htmlFor="description">Description</Label>
+        <Textarea id="description" name="description" rows={2} />
+      </FieldGroup>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <FieldGroup>
+          <Label htmlFor="assigned_staff_id">Assign to</Label>
+          <Select id="assigned_staff_id" name="assigned_staff_id">
+            <option value="">Unassigned</option>
+            {staffOptions.map((s) => (
+              <option key={s.staff_id} value={s.staff_id}>
+                {s.profiles?.name ?? s.profiles?.email ?? s.staff_id}
+              </option>
+            ))}
+          </Select>
+        </FieldGroup>
+
+        <FieldGroup>
+          <Label htmlFor="due_date">Due date</Label>
+          <Input id="due_date" name="due_date" type="date" />
+        </FieldGroup>
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="description">Description</label>
-        <textarea id="description" name="description" className="border rounded px-2 py-1" />
-      </div>
+      <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+        <input type="checkbox" name="recurring" className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-600" />
+        Recurring
+      </label>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="assigned_staff_id">Assign to</label>
-        <select id="assigned_staff_id" name="assigned_staff_id" className="border rounded px-2 py-1">
-          <option value="">Unassigned</option>
-          {staffOptions.map((s) => (
-            <option key={s.staff_id} value={s.staff_id}>
-              {s.profiles?.name ?? s.profiles?.email ?? s.staff_id}
-            </option>
-          ))}
-        </select>
-      </div>
+      <FieldError>{state?.message}</FieldError>
 
-      <div className="flex gap-4">
-        <div className="flex flex-col gap-1">
-          <label htmlFor="due_date">Due date</label>
-          <input id="due_date" name="due_date" type="date" className="border rounded px-2 py-1" />
-        </div>
-        <label className="flex items-center gap-2 self-end">
-          <input type="checkbox" name="recurring" />
-          Recurring
-        </label>
-      </div>
-
-      {state?.message && <p className="text-sm text-red-600">{state.message}</p>}
-
-      <button
-        disabled={pending}
-        type="submit"
-        className="self-start rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
-      >
+      <Button disabled={pending} type="submit" variant="secondary" className="self-start">
         {pending ? "Creating..." : "Create task"}
-      </button>
+      </Button>
     </form>
   );
 }

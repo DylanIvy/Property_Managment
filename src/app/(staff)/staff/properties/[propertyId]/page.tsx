@@ -2,6 +2,10 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/dal";
 import { markTaskDone } from "@/lib/actions/tasks";
+import { PageHeader } from "@/components/ui/page-header";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export default async function StaffPropertyDetailPage({
   params,
@@ -33,35 +37,36 @@ export default async function StaffPropertyDetailPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold">{property.name}</h1>
-        {property.address && <p className="text-sm text-gray-500">{property.address}</p>}
-      </div>
+      <PageHeader title={property.name} subtitle={property.address} />
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-medium">Your tasks</h2>
-        {!tasks?.length && <p className="text-sm text-gray-500">No tasks assigned to you here.</p>}
-        <ul className="flex flex-col gap-2">
+        <h2 className="font-medium text-zinc-900 dark:text-zinc-50">Your tasks</h2>
+        {!tasks?.length && (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">No tasks assigned to you here.</p>
+        )}
+        <div className="flex flex-col gap-2">
           {tasks?.map((t) => (
-            <li key={t.id} className="rounded border p-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="font-medium">{t.title}</span>
-                <span className={t.status === "done" ? "text-green-700" : "text-amber-700"}>
-                  {t.status}
-                </span>
+            <Card key={t.id} className="p-3 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-medium text-zinc-900 dark:text-zinc-50">{t.title}</span>
+                <Badge tone={t.status === "done" ? "done" : "open"}>{t.status}</Badge>
               </div>
-              {t.description && <p className="text-gray-500">{t.description}</p>}
-              {t.due_date && <p className="text-gray-500">Due {t.due_date}</p>}
+              {t.description && (
+                <p className="text-zinc-500 dark:text-zinc-400">{t.description}</p>
+              )}
+              {t.due_date && (
+                <p className="text-zinc-500 dark:text-zinc-400">Due {t.due_date}</p>
+              )}
               {t.status !== "done" && (
-                <form action={markTaskDone.bind(null, t.id, propertyId)}>
-                  <button type="submit" className="mt-2 rounded bg-black px-3 py-1 text-xs text-white">
+                <form action={markTaskDone.bind(null, t.id, propertyId)} className="mt-2">
+                  <Button type="submit" variant="secondary" className="px-3 py-1 text-xs">
                     Mark done
-                  </button>
+                  </Button>
                 </form>
               )}
-            </li>
+            </Card>
           ))}
-        </ul>
+        </div>
       </section>
     </div>
   );

@@ -3,70 +3,79 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { signup } from "@/lib/actions/auth";
+import { AuthCard } from "@/components/auth-card";
+import { Button } from "@/components/ui/button";
+import { Input, Label, FieldGroup, FieldError } from "@/components/ui/field";
+import { cn } from "@/lib/cn";
 
 export default function SignupPage() {
   const [state, action, pending] = useActionState(signup, undefined);
 
   return (
-    <div className="mx-auto flex max-w-sm flex-1 flex-col justify-center gap-6 p-6">
-      <h1 className="text-xl font-semibold">Sign up</h1>
-
+    <AuthCard title="Sign up">
       <form action={action} className="flex flex-col gap-4">
-        <fieldset className="flex gap-4">
-          <label className="flex items-center gap-2">
-            <input type="radio" name="role" value="owner" defaultChecked />
-            Owner
-          </label>
-          <label className="flex items-center gap-2">
-            <input type="radio" name="role" value="staff" />
-            Staff
-          </label>
-        </fieldset>
-        {state?.errors?.role && <p className="text-sm text-red-600">{state.errors.role}</p>}
+        <FieldGroup>
+          <Label>I am a...</Label>
+          <div className="flex gap-2">
+            {(["owner", "staff"] as const).map((role, i) => (
+              <label
+                key={role}
+                className={cn(
+                  "flex flex-1 cursor-pointer items-center justify-center rounded-md border px-3 py-2 text-sm font-medium capitalize",
+                  "border-zinc-300 dark:border-zinc-700 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-700",
+                  "dark:has-[:checked]:bg-blue-900/30 dark:has-[:checked]:text-blue-300",
+                )}
+              >
+                <input
+                  type="radio"
+                  name="role"
+                  value={role}
+                  defaultChecked={i === 0}
+                  className="sr-only"
+                />
+                {role}
+              </label>
+            ))}
+          </div>
+          <FieldError>{state?.errors?.role}</FieldError>
+        </FieldGroup>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="name">Name</label>
-          <input id="name" name="name" className="border rounded px-2 py-1" />
-          {state?.errors?.name && <p className="text-sm text-red-600">{state.errors.name}</p>}
-        </div>
+        <FieldGroup>
+          <Label htmlFor="name">Name</Label>
+          <Input id="name" name="name" autoComplete="name" />
+          <FieldError>{state?.errors?.name}</FieldError>
+        </FieldGroup>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="email">Email</label>
-          <input id="email" name="email" type="email" className="border rounded px-2 py-1" />
-          {state?.errors?.email && <p className="text-sm text-red-600">{state.errors.email}</p>}
-        </div>
+        <FieldGroup>
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" name="email" type="email" autoComplete="email" />
+          <FieldError>{state?.errors?.email}</FieldError>
+        </FieldGroup>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="phone">Phone (optional)</label>
-          <input id="phone" name="phone" className="border rounded px-2 py-1" />
-        </div>
+        <FieldGroup>
+          <Label htmlFor="phone">Phone (optional)</Label>
+          <Input id="phone" name="phone" autoComplete="tel" />
+        </FieldGroup>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="password">Password</label>
-          <input id="password" name="password" type="password" className="border rounded px-2 py-1" />
-          {state?.errors?.password && (
-            <ul className="text-sm text-red-600">
-              {state.errors.password.map((err) => (
-                <li key={err}>{err}</li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <FieldGroup>
+          <Label htmlFor="password">Password</Label>
+          <Input id="password" name="password" type="password" autoComplete="new-password" />
+          <FieldError>{state?.errors?.password}</FieldError>
+        </FieldGroup>
 
-        {state?.message && <p className="text-sm text-red-600">{state.message}</p>}
+        <FieldError>{state?.message}</FieldError>
 
-        <button
-          disabled={pending}
-          type="submit"
-          className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
-        >
+        <Button disabled={pending} type="submit" className="mt-2 w-full">
           {pending ? "Creating account..." : "Sign up"}
-        </button>
+        </Button>
       </form>
 
-      <p className="text-sm">
-        Already have an account? <Link href="/login" className="underline">Log in</Link>
+      <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
+        Already have an account?{" "}
+        <Link href="/login" className="font-medium text-blue-600 hover:underline dark:text-blue-400">
+          Log in
+        </Link>
       </p>
-    </div>
+    </AuthCard>
   );
 }

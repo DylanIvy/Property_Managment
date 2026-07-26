@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/ui/page-header";
+import { Card } from "@/components/ui/card";
+import { buttonClasses } from "@/components/ui/button";
 
 export default async function OwnerPropertiesPage() {
   const supabase = await createClient();
@@ -10,26 +13,32 @@ export default async function OwnerPropertiesPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Properties</h1>
-        <Link href="/owner/properties/new" className="rounded bg-black px-4 py-2 text-sm text-white">
-          + New property
-        </Link>
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Properties"
+        action={
+          <Link href="/owner/properties/new" className={buttonClasses("primary")}>
+            + New property
+          </Link>
+        }
+      />
 
-      {!properties?.length && <p className="text-sm text-gray-500">No properties yet.</p>}
+      {!properties?.length && (
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">No properties yet.</p>
+      )}
 
-      <ul className="flex flex-col gap-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {properties?.map((property) => (
-          <li key={property.id} className="rounded border p-4">
-            <Link href={`/owner/properties/${property.id}`} className="font-medium underline">
-              {property.name}
-            </Link>
-            {property.address && <p className="text-sm text-gray-500">{property.address}</p>}
-          </li>
+          <Link key={property.id} href={`/owner/properties/${property.id}`}>
+            <Card className="h-full transition-colors hover:border-blue-400 dark:hover:border-blue-600">
+              <p className="font-medium text-zinc-900 dark:text-zinc-50">{property.name}</p>
+              {property.address && (
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">{property.address}</p>
+              )}
+            </Card>
+          </Link>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
