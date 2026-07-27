@@ -2,6 +2,7 @@
 
 import * as z from "zod";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/dal";
@@ -82,6 +83,8 @@ export async function markTaskDone(taskId: string, propertyId: string) {
     throw new Error(error.message);
   }
 
+  revalidatePath(`/staff/properties/${propertyId}`);
+
   // Recurring tasks spawn their next occurrence as soon as the current one is
   // completed. Requires a due date to know when the next one falls. The
   // completing user is staff, who aren't allowed to insert tasks under RLS
@@ -91,6 +94,7 @@ export async function markTaskDone(taskId: string, propertyId: string) {
   // to complete.
   if (task?.recurring && task.recurrence_interval && task.due_date) {
     const admin = createAdminClient();
+    const nextDate = nextDueDate(task.due_date, task.recurrence_interval);
     const { error: spawnError } = await admin.from("tasks").insert({
       property_id: task.property_id,
       title: task.title,
@@ -98,13 +102,18 @@ export async function markTaskDone(taskId: string, propertyId: string) {
       assigned_staff_id: task.assigned_staff_id,
       recurring: true,
       recurrence_interval: task.recurrence_interval,
-      due_date: nextDueDate(task.due_date, task.recurrence_interval),
+      due_date: nextDate,
     });
 
     if (spawnError) {
       throw new Error(spawnError.message);
     }
+
+    // A same-titled task now also sits in Active — without this, completing
+    // a recurring task can read as "nothing happened" since an item with the
+    // same name is still there. Spell out that it's the next occurrence.
+    redirect(`/staff/properties/${propertyId}?completedNext=${nextDate}`);
   }
 
-  revalidatePath(`/staff/properties/${propertyId}`);
+  redirect(`/staff/properties/${propertyId}?completed=1`);
 }

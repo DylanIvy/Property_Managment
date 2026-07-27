@@ -35,27 +35,26 @@ export function MonthCalendar({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+      <div className="flex items-center gap-2">
+        <Link
+          href={hrefFor({ month: monthParam(prev.year, prev.month) })}
+          className="rounded border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-700"
+        >
+          ←
+        </Link>
+        <Link
+          href={hrefFor({})}
+          title="Jump to current month"
+          className="text-lg font-semibold text-zinc-900 hover:underline dark:text-zinc-50"
+        >
           {formatMonthLabel(year, month)}
-        </h2>
-        <div className="flex gap-2 text-sm">
-          <Link
-            href={hrefFor({ month: monthParam(prev.year, prev.month) })}
-            className="rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700"
-          >
-            ←
-          </Link>
-          <Link href={hrefFor({})} className="rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700">
-            Today
-          </Link>
-          <Link
-            href={hrefFor({ month: monthParam(next.year, next.month) })}
-            className="rounded border border-zinc-300 px-2 py-1 dark:border-zinc-700"
-          >
-            →
-          </Link>
-        </div>
+        </Link>
+        <Link
+          href={hrefFor({ month: monthParam(next.year, next.month) })}
+          className="rounded border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-700"
+        >
+          →
+        </Link>
       </div>
 
       <div className="grid grid-cols-7 gap-px overflow-hidden rounded-lg border border-zinc-200 bg-zinc-200 text-xs dark:border-zinc-800 dark:bg-zinc-800">

@@ -14,10 +14,10 @@ export default async function StaffPropertyDetailPage({
   searchParams,
 }: {
   params: Promise<{ propertyId: string }>;
-  searchParams: Promise<{ view?: string; month?: string }>;
+  searchParams: Promise<{ view?: string; month?: string; completed?: string; completedNext?: string }>;
 }) {
   const { propertyId } = await params;
-  const { view, month } = await searchParams;
+  const { view, month, completed, completedNext } = await searchParams;
   const profile = await requireRole("staff");
   const supabase = await createClient();
 
@@ -35,7 +35,7 @@ export default async function StaffPropertyDetailPage({
   // member on this specific property — no cross-property leakage.
   const { data: tasks } = await supabase
     .from("tasks")
-    .select("id, title, description, status, due_date, completed_at, recurrence_interval")
+    .select("id, title, description, status, due_date, completed_at, recurring, recurrence_interval")
     .eq("property_id", propertyId)
     .eq("assigned_staff_id", profile.id)
     .order("created_at", { ascending: false });
@@ -70,20 +70,41 @@ export default async function StaffPropertyDetailPage({
     );
   }
 
-  const activeTasks = (tasks ?? []).filter((t) => t.status !== "done");
+  const openTasks = (tasks ?? []).filter((t) => t.status !== "done");
+  const activeTasks = openTasks.filter((t) => !t.recurring);
+  const recurringTasks = openTasks.filter((t) => t.recurring);
   const completedTasks = (tasks ?? []).filter((t) => t.status === "done");
+
+  const markDoneButton = (taskId: string) => (
+    <form action={markTaskDone.bind(null, taskId, propertyId)}>
+      <Button type="submit" variant="secondary" className="px-3 py-1 text-xs">
+        Mark done
+      </Button>
+    </form>
+  );
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={property.name} subtitle={property.address} />
       <ViewToggle view="list" basePath={basePath} />
 
+      {completedNext && (
+        <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700 dark:bg-green-900/30 dark:text-green-300">
+          Task completed. Since it repeats, the next occurrence (due {completedNext}) was added under Recurring.
+        </p>
+      )}
+      {completed && !completedNext && (
+        <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700 dark:bg-green-900/30 dark:text-green-300">
+          Task completed.
+        </p>
+      )}
+
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
           Active ({activeTasks.length})
         </h2>
         {!activeTasks.length && (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">No active tasks assigned to you here.</p>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">No one-off tasks assigned to you here.</p>
         )}
         <div className="flex flex-col gap-2">
           {activeTasks.map((t) => (
@@ -93,14 +114,29 @@ export default async function StaffPropertyDetailPage({
               description={t.description}
               status={t.status}
               meta={t.due_date ? `Due ${t.due_date}` : null}
+              action={markDoneButton(t.id)}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+          Recurring ({recurringTasks.length})
+        </h2>
+        {!recurringTasks.length && (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">No recurring tasks assigned to you here.</p>
+        )}
+        <div className="flex flex-col gap-2">
+          {recurringTasks.map((t) => (
+            <TaskCard
+              key={t.id}
+              title={t.title}
+              description={t.description}
+              status={t.status}
+              meta={t.due_date ? `Next due ${t.due_date}` : null}
               recurrenceInterval={t.recurrence_interval}
-              action={
-                <form action={markTaskDone.bind(null, t.id, propertyId)}>
-                  <Button type="submit" variant="secondary" className="px-3 py-1 text-xs">
-                    Mark done
-                  </Button>
-                </form>
-              }
+              action={markDoneButton(t.id)}
             />
           ))}
         </div>

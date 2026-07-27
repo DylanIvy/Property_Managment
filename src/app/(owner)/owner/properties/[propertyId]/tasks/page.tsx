@@ -63,10 +63,12 @@ export default async function OwnerPropertyTasksPage({
     profiles: Array.isArray(s.profiles) ? s.profiles[0] ?? null : s.profiles,
   }));
 
-  const activeTasks = (tasks ?? []).filter((t) => t.status !== "done");
+  const openTasks = (tasks ?? []).filter((t) => t.status !== "done");
+  const activeTasks = openTasks.filter((t) => !t.recurring);
+  const recurringTasks = openTasks.filter((t) => t.recurring);
   const completedTasks = (tasks ?? []).filter((t) => t.status === "done");
 
-  const assigneeLabel = (t: (typeof activeTasks)[number]) => {
+  const assigneeLabel = (t: (typeof openTasks)[number]) => {
     const p = Array.isArray(t.profiles) ? t.profiles[0] : t.profiles;
     return `Assigned to: ${p?.name ?? p?.email ?? "Unassigned"}`;
   };
@@ -80,7 +82,7 @@ export default async function OwnerPropertyTasksPage({
           Active ({activeTasks.length})
         </h2>
         {!activeTasks.length && (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">No active tasks.</p>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">No one-off tasks.</p>
         )}
         <div className="flex flex-col gap-2">
           {activeTasks.map((t) => (
@@ -90,6 +92,26 @@ export default async function OwnerPropertyTasksPage({
               description={t.description}
               status={t.status}
               meta={`${assigneeLabel(t)}${t.due_date ? ` · Due ${t.due_date}` : ""}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+          Recurring ({recurringTasks.length})
+        </h2>
+        {!recurringTasks.length && (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">No recurring tasks scheduled.</p>
+        )}
+        <div className="flex flex-col gap-2">
+          {recurringTasks.map((t) => (
+            <TaskCard
+              key={t.id}
+              title={t.title}
+              description={t.description}
+              status={t.status}
+              meta={`${assigneeLabel(t)}${t.due_date ? ` · Next due ${t.due_date}` : ""}`}
               recurrenceInterval={t.recurrence_interval}
             />
           ))}
