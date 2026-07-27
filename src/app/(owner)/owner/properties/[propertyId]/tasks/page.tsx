@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { TaskCard } from "@/components/task-card";
 import { CreateTaskForm } from "../create-task-form";
 
 export default async function OwnerPropertyTasksPage({
@@ -13,7 +12,9 @@ export default async function OwnerPropertyTasksPage({
 
   const { data: tasks } = await supabase
     .from("tasks")
-    .select("id, title, description, status, due_date, assigned_staff_id, profiles(name, email)")
+    .select(
+      "id, title, description, status, due_date, completed_at, assigned_staff_id, profiles(name, email)",
+    )
     .eq("property_id", propertyId)
     .order("created_at", { ascending: false });
 
@@ -27,31 +28,56 @@ export default async function OwnerPropertyTasksPage({
     profiles: Array.isArray(s.profiles) ? s.profiles[0] ?? null : s.profiles,
   }));
 
+  const activeTasks = (tasks ?? []).filter((t) => t.status !== "done");
+  const completedTasks = (tasks ?? []).filter((t) => t.status === "done");
+
+  const assigneeLabel = (t: (typeof activeTasks)[number]) => {
+    const p = Array.isArray(t.profiles) ? t.profiles[0] : t.profiles;
+    return `Assigned to: ${p?.name ?? p?.email ?? "Unassigned"}`;
+  };
+
   return (
-    <section className="flex flex-col gap-3">
-      {!tasks?.length && (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">No tasks yet.</p>
-      )}
+    <section className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        {tasks?.map((t) => {
-          const p = Array.isArray(t.profiles) ? t.profiles[0] : t.profiles;
-          return (
-            <Card key={t.id} className="p-3 text-sm">
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-medium text-zinc-900 dark:text-zinc-50">{t.title}</span>
-                <Badge tone={t.status === "done" ? "done" : "open"}>{t.status}</Badge>
-              </div>
-              {t.description && (
-                <p className="text-zinc-500 dark:text-zinc-400">{t.description}</p>
-              )}
-              <p className="text-zinc-500 dark:text-zinc-400">
-                Assigned to: {p?.name ?? p?.email ?? "Unassigned"}
-                {t.due_date && ` · Due ${t.due_date}`}
-              </p>
-            </Card>
-          );
-        })}
+        <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+          Active ({activeTasks.length})
+        </h2>
+        {!activeTasks.length && (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">No active tasks.</p>
+        )}
+        <div className="flex flex-col gap-2">
+          {activeTasks.map((t) => (
+            <TaskCard
+              key={t.id}
+              title={t.title}
+              description={t.description}
+              status={t.status}
+              meta={`${assigneeLabel(t)}${t.due_date ? ` · Due ${t.due_date}` : ""}`}
+            />
+          ))}
+        </div>
       </div>
+
+      {completedTasks.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+            Completed ({completedTasks.length})
+          </h2>
+          <div className="flex flex-col gap-2">
+            {completedTasks.map((t) => (
+              <TaskCard
+                key={t.id}
+                title={t.title}
+                description={t.description}
+                status={t.status}
+                meta={assigneeLabel(t)}
+                completedAt={t.completed_at}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       <CreateTaskForm propertyId={propertyId} staffOptions={staffOptions} />
     </section>
   );

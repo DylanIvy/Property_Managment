@@ -10,7 +10,7 @@ const TaskSchema = z.object({
   description: z.string().trim().optional(),
   assigned_staff_id: z.string().trim().optional(),
   due_date: z.string().trim().optional(),
-  recurring: z.string().optional(),
+  recurring: z.string().nullish(),
 });
 
 export type TaskFormState =
@@ -53,7 +53,7 @@ export async function createTask(
     return { message: error.message };
   }
 
-  revalidatePath(`/owner/properties/${propertyId}`);
+  revalidatePath(`/owner/properties/${propertyId}/tasks`);
 }
 
 export async function markTaskDone(taskId: string, propertyId: string) {
@@ -62,7 +62,7 @@ export async function markTaskDone(taskId: string, propertyId: string) {
   const supabase = await createClient();
   const { error } = await supabase
     .from("tasks")
-    .update({ status: "done" })
+    .update({ status: "done", completed_at: new Date().toISOString() })
     .eq("id", taskId);
 
   if (error) {

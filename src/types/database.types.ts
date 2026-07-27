@@ -110,6 +110,7 @@ export interface Database {
           recurring: boolean;
           due_date: string | null;
           photo_proof_url: string | null;
+          completed_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -122,6 +123,7 @@ export interface Database {
           recurring?: boolean;
           due_date?: string | null;
           photo_proof_url?: string | null;
+          completed_at?: string | null;
           created_at?: string;
         };
         Update: {
@@ -134,6 +136,7 @@ export interface Database {
           recurring?: boolean;
           due_date?: string | null;
           photo_proof_url?: string | null;
+          completed_at?: string | null;
           created_at?: string;
         };
         Relationships: [
