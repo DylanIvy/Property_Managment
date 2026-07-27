@@ -1,22 +1,57 @@
 import { createClient } from "@/lib/supabase/server";
 import { TaskCard } from "@/components/task-card";
 import { CreateTaskForm } from "../create-task-form";
+import { ViewToggle } from "@/components/view-toggle";
+import { MonthCalendar, type CalendarEvent } from "@/components/month-calendar";
+import { parseMonthParam } from "@/lib/calendar";
 
 export default async function OwnerPropertyTasksPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ propertyId: string }>;
+  searchParams: Promise<{ view?: string; month?: string }>;
 }) {
   const { propertyId } = await params;
+  const { view, month } = await searchParams;
+  const basePath = `/owner/properties/${propertyId}/tasks`;
+
   const supabase = await createClient();
 
   const { data: tasks } = await supabase
     .from("tasks")
     .select(
-      "id, title, description, status, due_date, completed_at, assigned_staff_id, profiles(name, email)",
+      "id, title, description, status, due_date, completed_at, recurring, recurrence_interval, assigned_staff_id, profiles(name, email)",
     )
     .eq("property_id", propertyId)
     .order("created_at", { ascending: false });
+
+  if (view === "calendar") {
+    const { year, month: monthIndex } = parseMonthParam(month);
+    const events: Record<string, CalendarEvent[]> = {};
+    for (const t of tasks ?? []) {
+      if (!t.due_date) continue;
+      (events[t.due_date] ??= []).push({
+        id: t.id,
+        label: t.title,
+        href: basePath,
+        done: t.status === "done",
+      });
+    }
+
+    return (
+      <section className="flex flex-col gap-6">
+        <ViewToggle view="calendar" basePath={basePath} />
+        <MonthCalendar
+          year={year}
+          month={monthIndex}
+          events={events}
+          basePath={basePath}
+          extraParams={{ view: "calendar" }}
+        />
+      </section>
+    );
+  }
 
   const { data: staff } = await supabase
     .from("property_staff")
@@ -38,6 +73,8 @@ export default async function OwnerPropertyTasksPage({
 
   return (
     <section className="flex flex-col gap-6">
+      <ViewToggle view="list" basePath={basePath} />
+
       <div className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
           Active ({activeTasks.length})
@@ -53,6 +90,7 @@ export default async function OwnerPropertyTasksPage({
               description={t.description}
               status={t.status}
               meta={`${assigneeLabel(t)}${t.due_date ? ` · Due ${t.due_date}` : ""}`}
+              recurrenceInterval={t.recurrence_interval}
             />
           ))}
         </div>

@@ -5,13 +5,19 @@ import { markTaskDone } from "@/lib/actions/tasks";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { TaskCard } from "@/components/task-card";
+import { ViewToggle } from "@/components/view-toggle";
+import { MonthCalendar, type CalendarEvent } from "@/components/month-calendar";
+import { parseMonthParam } from "@/lib/calendar";
 
 export default async function StaffPropertyDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ propertyId: string }>;
+  searchParams: Promise<{ view?: string; month?: string }>;
 }) {
   const { propertyId } = await params;
+  const { view, month } = await searchParams;
   const profile = await requireRole("staff");
   const supabase = await createClient();
 
@@ -29,10 +35,40 @@ export default async function StaffPropertyDetailPage({
   // member on this specific property — no cross-property leakage.
   const { data: tasks } = await supabase
     .from("tasks")
-    .select("id, title, description, status, due_date, completed_at")
+    .select("id, title, description, status, due_date, completed_at, recurrence_interval")
     .eq("property_id", propertyId)
     .eq("assigned_staff_id", profile.id)
     .order("created_at", { ascending: false });
+
+  const basePath = `/staff/properties/${propertyId}`;
+
+  if (view === "calendar") {
+    const { year, month: monthIndex } = parseMonthParam(month);
+    const events: Record<string, CalendarEvent[]> = {};
+    for (const t of tasks ?? []) {
+      if (!t.due_date) continue;
+      (events[t.due_date] ??= []).push({
+        id: t.id,
+        label: t.title,
+        href: basePath,
+        done: t.status === "done",
+      });
+    }
+
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader title={property.name} subtitle={property.address} />
+        <ViewToggle view="calendar" basePath={basePath} />
+        <MonthCalendar
+          year={year}
+          month={monthIndex}
+          events={events}
+          basePath={basePath}
+          extraParams={{ view: "calendar" }}
+        />
+      </div>
+    );
+  }
 
   const activeTasks = (tasks ?? []).filter((t) => t.status !== "done");
   const completedTasks = (tasks ?? []).filter((t) => t.status === "done");
@@ -40,6 +76,7 @@ export default async function StaffPropertyDetailPage({
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={property.name} subtitle={property.address} />
+      <ViewToggle view="list" basePath={basePath} />
 
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
@@ -56,6 +93,7 @@ export default async function StaffPropertyDetailPage({
               description={t.description}
               status={t.status}
               meta={t.due_date ? `Due ${t.due_date}` : null}
+              recurrenceInterval={t.recurrence_interval}
               action={
                 <form action={markTaskDone.bind(null, t.id, propertyId)}>
                   <Button type="submit" variant="secondary" className="px-3 py-1 text-xs">

@@ -4,6 +4,7 @@
 
 export type UserRole = "owner" | "staff";
 export type TaskStatus = "open" | "done";
+export type RecurrenceInterval = "daily" | "weekly" | "biweekly" | "monthly";
 
 export interface Database {
   public: {
@@ -108,6 +109,7 @@ export interface Database {
           assigned_staff_id: string | null;
           status: TaskStatus;
           recurring: boolean;
+          recurrence_interval: RecurrenceInterval | null;
           due_date: string | null;
           photo_proof_url: string | null;
           completed_at: string | null;
@@ -121,6 +123,7 @@ export interface Database {
           assigned_staff_id?: string | null;
           status?: TaskStatus;
           recurring?: boolean;
+          recurrence_interval?: RecurrenceInterval | null;
           due_date?: string | null;
           photo_proof_url?: string | null;
           completed_at?: string | null;
@@ -134,6 +137,7 @@ export interface Database {
           assigned_staff_id?: string | null;
           status?: TaskStatus;
           recurring?: boolean;
+          recurrence_interval?: RecurrenceInterval | null;
           due_date?: string | null;
           photo_proof_url?: string | null;
           completed_at?: string | null;
@@ -144,6 +148,12 @@ export interface Database {
             foreignKeyName: "tasks_assigned_staff_id_fkey";
             columns: ["assigned_staff_id"];
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tasks_property_id_fkey";
+            columns: ["property_id"];
+            referencedRelation: "properties";
             referencedColumns: ["id"];
           },
         ];

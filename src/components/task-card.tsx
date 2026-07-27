@@ -1,6 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDateTime } from "@/lib/format";
+import { RECURRENCE_LABELS } from "@/lib/recurrence";
+import type { RecurrenceInterval } from "@/types/database.types";
 
 export function TaskCard({
   title,
@@ -8,6 +10,7 @@ export function TaskCard({
   status,
   meta,
   completedAt,
+  recurrenceInterval,
   action,
 }: {
   title: string;
@@ -15,6 +18,7 @@ export function TaskCard({
   status: "open" | "done";
   meta?: string | null;
   completedAt?: string | null;
+  recurrenceInterval?: RecurrenceInterval | null;
   action?: React.ReactNode;
 }) {
   return (
@@ -25,6 +29,11 @@ export function TaskCard({
       </div>
       {description && <p className="text-zinc-500 dark:text-zinc-400">{description}</p>}
       {meta && <p className="text-zinc-500 dark:text-zinc-400">{meta}</p>}
+      {recurrenceInterval && (
+        <p className="text-xs text-zinc-400 dark:text-zinc-500">
+          {RECURRENCE_LABELS[recurrenceInterval]}
+        </p>
+      )}
       {status === "done" && completedAt && (
         <p className="text-xs text-zinc-400 dark:text-zinc-500">
           Completed {formatDateTime(completedAt)}
