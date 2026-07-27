@@ -31,6 +31,15 @@ export default async function StaffPropertyDetailPage({
 
   if (!property) notFound();
 
+  const { data: link } = await supabase
+    .from("property_staff")
+    .select("staff_nickname")
+    .eq("property_id", propertyId)
+    .eq("staff_id", profile.id)
+    .maybeSingle();
+
+  const displayName = link?.staff_nickname || property.name;
+
   // RLS (tasks_select) further scopes this to tasks assigned to this staff
   // member on this specific property — no cross-property leakage.
   const { data: tasks } = await supabase
@@ -57,7 +66,7 @@ export default async function StaffPropertyDetailPage({
 
     return (
       <div className="flex flex-col gap-6">
-        <PageHeader title={property.name} subtitle={property.address} />
+        <PageHeader title={displayName} subtitle={property.address} />
         <ViewToggle view="calendar" basePath={basePath} />
         <MonthCalendar
           year={year}
@@ -85,7 +94,7 @@ export default async function StaffPropertyDetailPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={property.name} subtitle={property.address} />
+      <PageHeader title={displayName} subtitle={property.address} />
       <ViewToggle view="list" basePath={basePath} />
 
       {completedNext && (

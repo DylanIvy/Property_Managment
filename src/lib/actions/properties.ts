@@ -4,6 +4,7 @@ import * as z from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/dal";
 
 const PropertySchema = z.object({
@@ -115,4 +116,49 @@ export async function addStaffToProperty(
 
   revalidatePath(`/owner/properties/${propertyId}`);
   return { message: "Staff member added." };
+}
+
+const NicknameSchema = z.object({
+  nickname: z.string().trim().max(100, { error: "Keep it under 100 characters." }).optional(),
+});
+
+export type NicknameState =
+  | {
+      errors?: Record<string, string[]>;
+      message?: string;
+    }
+  | undefined;
+
+export async function setPropertyNickname(
+  propertyId: string,
+  _prevState: NicknameState,
+  formData: FormData,
+): Promise<NicknameState> {
+  const profile = await requireRole("staff");
+
+  const validated = NicknameSchema.safeParse({ nickname: formData.get("nickname") });
+
+  if (!validated.success) {
+    return { errors: z.flattenError(validated.error).fieldErrors as Record<string, string[]> };
+  }
+
+  // Staff aren't allowed to update property_staff rows under RLS
+  // (property_staff_update_owner_only) - that policy protects owner-managed
+  // fields like service_type/notes. This is a personal, staff-only label, so
+  // it uses the admin client, with the WHERE clause (not RLS) enforcing that
+  // a staff member can only ever touch their own row for this property.
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("property_staff")
+    .update({ staff_nickname: validated.data.nickname || null })
+    .eq("property_id", propertyId)
+    .eq("staff_id", profile.id);
+
+  if (error) {
+    return { message: error.message };
+  }
+
+  revalidatePath(`/staff/properties`);
+  revalidatePath(`/staff/properties/${propertyId}`);
+  return { message: "Nickname saved." };
 }

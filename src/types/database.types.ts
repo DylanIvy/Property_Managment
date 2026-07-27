@@ -67,6 +67,7 @@ export interface Database {
           staff_id: string;
           service_type: string | null;
           notes: string | null;
+          staff_nickname: string | null;
           created_at: string;
         };
         Insert: {
@@ -75,6 +76,7 @@ export interface Database {
           staff_id: string;
           service_type?: string | null;
           notes?: string | null;
+          staff_nickname?: string | null;
           created_at?: string;
         };
         Update: {
@@ -83,6 +85,7 @@ export interface Database {
           staff_id?: string;
           service_type?: string | null;
           notes?: string | null;
+          staff_nickname?: string | null;
           created_at?: string;
         };
         Relationships: [
